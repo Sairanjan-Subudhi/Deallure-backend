@@ -1,7 +1,7 @@
 const docClient = require("../config/dynamoConfig");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const TABLE_NAME = "User_Products"; 
+const TABLE_NAME = "Users"; //c
 const SECRET_KEY = "your-secret-key"; 
 
 const signupUser = async ({ name, email, password }) => {
@@ -12,7 +12,7 @@ const signupUser = async ({ name, email, password }) => {
     try {
       // Check if the user already exists
       const checkUser = await docClient
-        .get({ TableName: TABLE_NAME, Key: { userEmail: email, productId: "USER" } })
+        .get({ TableName: TABLE_NAME, Key: { Email: email} })//c
         .promise();
   
       if (checkUser.Item) {
@@ -25,10 +25,9 @@ const signupUser = async ({ name, email, password }) => {
       const saltRounds = 10; // Number of salt rounds for bcrypt
       const hashedPassword = await bcrypt.hash(password, saltRounds);
   
-      // Store user details with hashed password
+      // Store user details with hashed password 
       const newUser = {
-        userEmail: email,
-        productId: "USER",
+        Email: email,
         name,
         password: hashedPassword, // Store hashed password instead of raw password
       };
@@ -49,7 +48,7 @@ const loginUser = async ({ email, password }) => {
     try {
       // Fetch the user from the database
       const user = await docClient
-        .get({ TableName: TABLE_NAME, Key: { userEmail: email, productId: "USER" } })
+        .get({ TableName: TABLE_NAME, Key: { Email: email } })//c
         .promise();
   
       if (!user.Item) {
@@ -63,7 +62,7 @@ const loginUser = async ({ email, password }) => {
       }
   
       // Generate a JWT token
-      const token = jwt.sign({ email: user.Item.userEmail }, SECRET_KEY, { expiresIn: "1h" });
+      const token = jwt.sign({ email: user.Item.Email }, SECRET_KEY, { expiresIn: "1h" });
   
       return { message: "Login successful", token };
     } catch (error) {
