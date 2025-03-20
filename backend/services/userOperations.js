@@ -1,74 +1,86 @@
 const docClient = require("../config/dynamoConfig");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
-const TABLE_NAME = "Users"; //c
+const bcrypt = require("bcryptjs");
+const TABLE_NAME = "Users"; 
 const SECRET_KEY = "your-secret-key"; 
 
 const signupUser = async ({ name, email, password }) => {
-    if (!name || !email || !password) {
-      throw new Error("All fields are required");
-    }
-  
-    try {
+  if (!name || !email || !password) {
+      const error = new Error("All fields are required");
+      error.statusCode = 400;
+      throw error;
+  }
+
+  try {
+      const normalizedEmail = email.toLowerCase();
+
       // Check if the user already exists
       const checkUser = await docClient
-        .get({ TableName: TABLE_NAME, Key: { Email: email} })//c
-        .promise();
-  
+          .get({ TableName: TABLE_NAME, Key: { Email: normalizedEmail } })
+          .promise();
+
       if (checkUser.Item) {
-        const error = new Error("Email already registered");
-        error.statusCode = 400;
-        throw error;
+          const error = new Error("Email already registered");
+          error.statusCode = 400;
+          throw error;
       }
-  
-      // Hash the password before storing
-      const saltRounds = 10; // Number of salt rounds for bcrypt
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
-  
-      // Store user details with hashed password 
+
+      // Hash the password securely
+      const salt = await bcrypt.genSalt(12);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      // Store user details
       const newUser = {
-        Email: email,
-        name,
-        password: hashedPassword, // Store hashed password instead of raw password
+          Email: normalizedEmail,
+          FullName: name,
+          Password: hashedPassword,
       };
-  
+
       await docClient.put({ TableName: TABLE_NAME, Item: newUser }).promise();
       return { message: "User registered successfully" };
-    } catch (error) {
+  } catch (error) {
       console.error("Signup Error:", error);
       throw error;
-    }
-  };
-  
+  }
+};
+
 const loginUser = async ({ email, password }) => {
-    if (!email || !password) {
-      throw new Error("Email and password are required");
-    }
-  
-    try {
+  if (!email || !password) {
+      const error = new Error("Email and password are required");
+      error.statusCode = 400;
+      throw error;
+  }
+
+  try {
+      const normalizedEmail = email.toLowerCase();
+
       // Fetch the user from the database
       const user = await docClient
-        .get({ TableName: TABLE_NAME, Key: { Email: email } })//c
-        .promise();
-  
+          .get({ TableName: TABLE_NAME, Key: { Email: normalizedEmail } })
+          .promise();
+
       if (!user.Item) {
-        throw new Error("User not registered. Please sign up.");
+          const error = new Error("User not registered. Please sign up.");
+          error.statusCode = 404;
+          throw error;
       }
-  
+
       // Compare provided password with stored hashed password
-      const isPasswordValid = await bcrypt.compare(password, user.Item.password);
+      const isPasswordValid = await bcrypt.compare(password, user.Item.Password);
       if (!isPasswordValid) {
-        throw new Error("Incorrect password. Please try again.");
+          const error = new Error("Incorrect password. Please try again.");
+          error.statusCode = 401;
+          throw error;
       }
-  
+
       // Generate a JWT token
       const token = jwt.sign({ email: user.Item.Email }, SECRET_KEY, { expiresIn: "1h" });
-  
+
       return { message: "Login successful", token };
-    } catch (error) {
+  } catch (error) {
       console.error("Login Error:", error.message);
       throw error;
-    }
-  };
+  }
+};
 
-module.exports = { signupUser, loginUser };
+module.exports = { signupUser, loginUser }
