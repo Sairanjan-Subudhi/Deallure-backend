@@ -1,7 +1,6 @@
 const express = require("express");
 const awsServerlessExpress = require("aws-serverless-express");
 const cors = require("cors");
-const tableRoutes = require("./routes/tableRoutes");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 //const PORT = 3000;
@@ -11,7 +10,6 @@ app.use(express.json());
 app.use(cors());
 
 // Use routes from tableRoutes.js
-app.use("/api", tableRoutes);
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
 
