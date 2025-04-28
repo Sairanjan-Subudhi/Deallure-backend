@@ -23,6 +23,7 @@ const addProduct = async (userEmail, productURL, threshold, timeout) => {
       Threshold_Value: threshold,
       Timeout_Time: timeout, // Timeout in months
       Created_At: new Date().toISOString(),
+      NotificationSent: false
     },
   };
 
