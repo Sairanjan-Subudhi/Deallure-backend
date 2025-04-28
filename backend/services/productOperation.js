@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const docClient = require("../config/dynamoConfig");
 
 const TABLE_NAME = "Products";
-const GSI_NAME = "UserEmail-index"; // GSI to fetch user's tracked products
+const GSI_NAME = "User_Email-index"; // GSI to fetch user's tracked products
 
 // Function to generate Product_ID from URL
 const generateProductID = (productURL) => {
@@ -40,11 +40,11 @@ const getUserProducts = async (userEmail) => {
   console.log("Fetching products for user:", userEmail);
 
   const params = {
-    TableName: TABLE_NAME, 
-    IndexName: GSI_NAME,  
-    KeyConditionExpression: "#email = :email",
-    ExpressionAttributeNames: { "#email": "User_Email" },
-    ExpressionAttributeValues: { ":email": userEmail },
+    TableName: TABLE_NAME,
+    KeyConditionExpression: "User_Email = :email",
+    ExpressionAttributeValues: {
+      ":email": userEmail,
+    },
   };
 
   try {

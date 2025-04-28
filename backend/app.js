@@ -3,7 +3,8 @@ const awsServerlessExpress = require("aws-serverless-express");
 const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
-//const PORT = 3000;
+const monitorRoutes = require("./routes/monitorRoutes");
+const PORT = 3000;
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,7 @@ app.use(cors());
 // Use routes from tableRoutes.js
 app.use("/auth", authRoutes);
 app.use("/products", productRoutes);
+app.use("/monitor", monitorRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello from AWS lambda");
@@ -28,12 +30,12 @@ app.all('*', (req, res) => {
 
 
 // Create AWS Lambda handler
-const server = awsServerlessExpress.createServer(app);
+// const server = awsServerlessExpress.createServer(app);
 
-exports.handler = (event, context) => {
-  return awsServerlessExpress.proxy(server, event, context);
-};
+// exports.handler = (event, context) => {
+//   return awsServerlessExpress.proxy(server, event, context);
+// };
 
-// app.listen(PORT, () => {
-//   console.log(`Server is running on http://localhost:${PORT}`);
-// });
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
