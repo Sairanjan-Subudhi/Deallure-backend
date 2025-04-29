@@ -18,18 +18,17 @@ async function saveScrapeResult(productID, userEmail, price) {
     const existingItem = data.Item ? data.Item : null;
 
     if (existingItem) {
-      // 2. If exists, UPDATE it
+      // 2. If exists, UPDATE it (without NotificationSent)
       const updateParams = {
         TableName: SCRAPING_TABLE,
         Key: {
           Product_ID: productID,
           User_Email: userEmail,
         },
-        UpdateExpression: "SET ScrapedPrice = :price, Scrape_Timestamp = :timestamp, NotificationSent = :notified",
+        UpdateExpression: "SET ScrapedPrice = :price, Scrape_Timestamp = :timestamp",
         ExpressionAttributeValues: {
           ":price": price,
           ":timestamp": new Date().toISOString(),
-          ":notified": false,
         },
       };
 
@@ -37,7 +36,7 @@ async function saveScrapeResult(productID, userEmail, price) {
       console.log(`✅ Scrape result updated for Product ID: ${productID}, User Email: ${userEmail}`);
       return { message: "Scrape result updated." };
     } else {
-      // 3. If does not exist, PUT a new item
+      // 3. If does not exist, PUT a new item (without NotificationSent)
       const putParams = {
         TableName: SCRAPING_TABLE,
         Item: {
@@ -45,7 +44,6 @@ async function saveScrapeResult(productID, userEmail, price) {
           User_Email: userEmail,
           ScrapedPrice: price,
           Scrape_Timestamp: new Date().toISOString(),
-          NotificationSent: false,
         },
       };
 

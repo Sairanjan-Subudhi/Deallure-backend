@@ -1,6 +1,7 @@
 const docClient = require("../config/dynamoConfig");
 const { scrapeProductPrice } = require("./scraperService"); // Your puppeteer scraper
 const { saveScrapeResult } = require("./scrapingService");
+const { sendPriceDropAlert } = require("./emailService");
 
 const PRODUCTS_TABLE = "Products";
 
@@ -18,6 +19,27 @@ async function fetchAllTrackedProducts() {
   }
 }
 
+async function updateNotificationSent(productID, userEmail) {
+  const params = {
+    TableName: PRODUCTS_TABLE,
+    Key: {
+      Product_ID: productID,
+      User_Email: userEmail,
+    },
+    UpdateExpression: "SET NotificationSent = :sent",
+    ExpressionAttributeValues: {
+      ":sent": true,
+    },
+  };
+
+  try {
+    await docClient.update(params).promise();
+    console.log(`✅ NotificationSent updated for Product_ID ${productID}`);
+  } catch (error) {
+    console.error(`Error updating NotificationSent for ${productID}:`, error.message);
+  }
+}
+
 async function monitorProductsAndScrape() {
   const trackedProducts = await fetchAllTrackedProducts();
 
@@ -27,11 +49,16 @@ async function monitorProductsAndScrape() {
   }
 
   for (const product of trackedProducts) {
-    const { Product_ID, User_Email, Product_URL, Threshold_Value } = product;
-    
+    const { Product_ID, User_Email, Product_URL, Threshold_Value, NotificationSent } = product;
+
+    if (NotificationSent) {
+      console.log(`⏩ Skipping Product_ID ${Product_ID} - notification already sent.`);
+      continue; // Skip if already notified
+    }
+
     try {
       const scrapedPriceStr = await scrapeProductPrice(Product_URL);
-      
+
       if (!scrapedPriceStr) {
         console.warn(`⚠️ Failed to scrape product ${Product_ID}`);
         continue;
@@ -44,13 +71,17 @@ async function monitorProductsAndScrape() {
         continue;
       }
 
-      // Save the scrape result
+      // Save the scrape result (history)
       await saveScrapeResult(Product_ID, User_Email, numericPrice);
 
-      // Compare price vs threshold
       if (numericPrice <= Threshold_Value) {
         console.log(`💥 Price drop detected for Product ID ${Product_ID} - Scraped Price: ${numericPrice}`);
-        // 🚧 SMTP Email Logic will be added later here
+
+        // ✅ Send email
+        await sendPriceDropAlert(User_Email, Product_URL, numericPrice);
+
+        // ✅ Update NotificationSent in Products table
+        await updateNotificationSent(Product_ID, User_Email);
       }
     } catch (error) {
       console.error(`Error monitoring product ${Product_ID}:`, error.message);

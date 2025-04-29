@@ -4,6 +4,8 @@ const cors = require("cors");
 const authRoutes = require("./routes/authRoutes");
 const productRoutes = require("./routes/productRoutes");
 const monitorRoutes = require("./routes/monitorRoutes");
+const cron = require("node-cron");  
+const { monitorProductsAndScrape } = require("./services/monitorService");
 const PORT = 3000;
 
 const app = express();
@@ -26,6 +28,14 @@ app.all('*', (req, res) => {
       method: req.method,
       headers: req.headers
   });
+});
+
+// Start Cron Job (runs every 1 minute)
+cron.schedule("*/3 * * * *", async () => {
+  console.log("🕒 Running scheduled product monitoring...");
+  await monitorProductsAndScrape();
+}, {
+  timezone: "Asia/Kolkata" // adjust timezone if needed
 });
 
 

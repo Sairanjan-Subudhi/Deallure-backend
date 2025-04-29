@@ -1,19 +1,6 @@
 // services/scraperService.js
 const puppeteer = require('puppeteer');
 
-// async function tryScrape(page, selector, retries = 2) {
-//   for (let attempt = 0; attempt < retries; attempt++) {
-//     try {
-//       await page.waitForSelector(selector, { timeout: 10000 });
-//       const price = await page.$eval(selector, el => el.textContent.trim());
-//       return price;
-//     } catch (error) {
-//       console.warn(`⚠️ Attempt ${attempt + 1} failed for selector ${selector}`);
-//       if (attempt === retries - 1) throw error; // Throw only after last attempt
-//     }
-//   }
-// }
-
 // Launch browser and get page
 async function launchBrowser(options = {}) {
   const browser = await puppeteer.launch({
