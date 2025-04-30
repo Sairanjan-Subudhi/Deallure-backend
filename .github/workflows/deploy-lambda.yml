@@ -21,10 +21,13 @@ jobs:
       - name: Install zip
         run: sudo apt-get install zip
 
-      - name: Create lambda.zip
+      - name: Install dependencies and create lambda.zip
         run: |
           cd backend
-          zip -r lambda.zip . -x ".env" ".gitignore"
+          # Install production dependencies only
+          npm ci --production
+          # Create zip including node_modules
+          zip -r lambda.zip . -x ".env" ".gitignore" "*.DS_Store"
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
