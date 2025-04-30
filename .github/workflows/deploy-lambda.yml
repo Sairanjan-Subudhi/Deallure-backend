@@ -13,10 +13,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Node.js (if needed)
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' 
+          node-version: '18'
 
       - name: Install zip
         run: sudo apt-get install zip
@@ -26,8 +26,8 @@ jobs:
           cd backend
           zip -r lambda.zip . -x ".env" ".gitignore"
 
-      - name: Upload to AWS Lambda
-        uses: aws-actions/aws-cli-action@v1
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -42,7 +42,6 @@ jobs:
 
       - name: Redeploy all APIs
         run: |
-          echo "Redeploying APIs..."
           aws apigateway create-deployment \
             --rest-api-id ${{ secrets.API_ID }} \
             --stage-name ${{ secrets.API_STAGE }} \
